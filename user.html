@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULTRA CORE | User Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;700;900&display=swap');
+        body { font-family: 'Urbanist', sans-serif; background-color: #020617; color: #f8fafc; }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.05); }
+        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
+        .hidden-section { display: none; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <nav class="flex items-center justify-between px-6 py-5 glass sticky top-0 z-50">
+        <div class="text-2xl font-black tracking-tighter text-blue-500 uppercase">Ultra<span class="text-white">Hub</span></div>
+        <div id="nav-links" class="flex gap-4">
+            <button onclick="showSection('login-section')" class="px-5 py-2 text-sm font-bold border border-white/10 rounded-full hover:bg-white hover:text-black transition">Login</button>
+        </div>
+    </nav>
+
+    <section id="login-section" class="py-20 px-6 text-center max-w-md mx-auto">
+        <h1 class="text-5xl font-black mb-6">Welcome to <span class="text-blue-500">Ultra Core</span></h1>
+        <div class="glass p-8 rounded-3xl glow-blue">
+            <h2 class="text-xl font-bold mb-6">User Login</h2>
+            <div class="space-y-4">
+                <input type="email" id="email" placeholder="Email Address" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl focus:border-blue-500 outline-none transition">
+                <input type="password" id="password" placeholder="Password" class="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl focus:border-blue-500 outline-none transition">
+                <button onclick="loginUser()" class="w-full bg-blue-600 p-4 rounded-xl font-bold hover:bg-blue-700 transition">SIGN IN</button>
+                <p class="text-xs text-slate-500">Don't have an account? <a href="#" onclick="registerUser()" class="text-blue-500 hover:underline">Register Now</a></p>
+            </div>
+        </div>
+    </section>
+
+    <section id="user-dashboard" class="hidden-section py-10 px-6 max-w-4xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <h2 class="text-3xl font-black">Hello, <span id="display-name" class="text-blue-500">User</span>!</h2>
+                <p class="text-slate-400">Account Status: <span id="acc-status" class="font-bold text-green-500 uppercase text-xs">Active</span></p>
+            </div>
+            <button onclick="logoutUser()" class="p-3 bg-red-600/20 text-red-500 border border-red-500/30 rounded-xl font-bold text-xs hover:bg-red-600 hover:text-white transition">LOGOUT</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <div class="glass p-8 rounded-3xl border-l-4 border-blue-500">
+                <h4 class="text-slate-400 text-xs font-bold uppercase mb-2">Your UID</h4>
+                <p id="user-uid" class="font-mono text-sm break-all">---</p>
+            </div>
+            <div class="glass p-8 rounded-3xl border-l-4 border-emerald-500">
+                <h4 class="text-slate-400 text-xs font-bold uppercase mb-2">Membership</h4>
+                <p class="font-bold text-xl uppercase tracking-widest text-emerald-500">Elite Core</p>
+            </div>
+        </div>
+
+        <div class="glass p-8 rounded-3xl mb-10">
+            <h4 class="text-xl font-bold mb-6 flex items-center"><i class="fa-solid fa-bolt mr-3 text-yellow-500"></i> Active Services</h4>
+            <div class="grid grid-cols-2 gap-4 text-center text-sm font-bold">
+                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5">Auto Bypass: <span class="text-green-500">ON</span></div>
+                <div class="bg-slate-900/50 p-4 rounded-xl border border-white/5">Anti-Ban: <span class="text-green-500">ON</span></div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // --- 1. APNA FIREBASE CONFIG ---
+        const firebaseConfig = {
+  apiKey: "AIzaSyDoZtOO0NeC8WvNT_L21WxyYCQRtry0xsQ",
+  authDomain: "panel-8c81c.firebaseapp.com",
+  databaseURL: "https://panel-8c81c-default-rtdb.firebaseio.com",
+  projectId: "panel-8c81c",
+  storageBucket: "panel-8c81c.firebasestorage.app",
+  messagingSenderId: "613780620355",
+  appId: "1:613780620355:web:f06f434d272239823e80f6",
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // --- 2. AUTH LOGIC ---
+        function loginUser() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            
+            auth.signInWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    console.log("Logged In!");
+                })
+                .catch((error) => { alert(error.message); });
+        }
+
+        function registerUser() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    // Save initial user data to DB
+                    const uid = userCredential.user.uid;
+                    db.ref('users/' + uid).set({
+                        email: email,
+                        accountStatus: 'active',
+                        role: 'user'
+                    });
+                    alert("Account Created!");
+                })
+                .catch((error) => { alert(error.message); });
+        }
+
+        function logoutUser() {
+            auth.signOut();
+        }
+
+        // --- 3. AUTO SECTION SWITCHER & DB SYNC ---
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is logged in
+                document.getElementById('login-section').classList.add('hidden-section');
+                document.getElementById('user-dashboard').classList.remove('hidden-section');
+                document.getElementById('user-uid').innerText = user.uid;
+                document.getElementById('display-name').innerText = user.email.split('@')[0];
+
+                // Sync account status from Firebase Realtime DB
+                db.ref('users/' + user.uid + '/accountStatus').on('value', (snapshot) => {
+                    const status = snapshot.val();
+                    const statusEl = document.getElementById('acc-status');
+                    statusEl.innerText = status;
+                    if(status === 'banned') {
+                        statusEl.className = 'font-bold text-red-500 uppercase text-xs';
+                        alert("Your account has been BANNED by Admin!");
+                    } else {
+                        statusEl.className = 'font-bold text-green-500 uppercase text-xs';
+                    }
+                });
+
+            } else {
+                // User is logged out
+                document.getElementById('login-section').classList.remove('hidden-section');
+                document.getElementById('user-dashboard').classList.add('hidden-section');
+            }
+        });
+
+        function showSection(id) {
+            // Simple section toggle logic
+        }
+    </script>
+</body>
+</html>
